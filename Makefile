@@ -6,3 +6,6 @@ lint:
 
 lint-fix:
 	uv run ruff check . --fix
+
+pytest:
+	uv run pytest
