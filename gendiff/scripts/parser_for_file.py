@@ -1,3 +1,4 @@
+import collections.abc
 import json
 import os
 
@@ -5,9 +6,6 @@ import yaml
 from yaml.loader import SafeLoader
 
 from files.file_path import dir_file_path
-
-import collections.abc
-
 
 # не проходили тесты на парсинг yaml, править парсинг yaml файлов
 if not hasattr(collections, 'Hashable'):
@@ -29,7 +27,8 @@ def parser_file(file_json):
                 return parsed_file
 
         else:
-            raise ValueError(f'Неподдерживаемый формат файла: {file_json}. Используйте .json, .yml или .yaml')
+            raise ValueError(f'Неподдерживаемый формат файла: {file_json}. '
+                             f'Используйте .json, .yml или .yaml')
 
     except FileNotFoundError:
         raise FileNotFoundError(f"Ошибка: Файл '{file_json}' не существует")
