@@ -32,4 +32,4 @@ def generate_diff(dict1, dict2, format_name='stylish'):
     elif format_name == 'json':
         return json_formatter.format(diff_tree)
 
-    return None
+    return f'Указанный формат {format_name} не существует'

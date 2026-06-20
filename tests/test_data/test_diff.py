@@ -1,4 +1,3 @@
-
 from gendiff.scripts.diff import build_diff, generate_diff
 
 
@@ -87,3 +86,11 @@ class TestGenerateDiff:
 }'''
         result = generate_diff(dictionaries_one, dictionaries_two, format_name)
         assert result == correct_jason
+
+    def test_non_existent_format(self):
+        format_name = 'non-existent'
+        dictionaries_one = {"timeout": 20, "verbose": True}
+        dictionaries_two = {"timeout": 20, "verbose": False,
+                            "host": "hexlet.io"}
+        result = generate_diff(dictionaries_one, dictionaries_two, format_name)
+        assert result == f'Указанный формат {format_name} не существует'
