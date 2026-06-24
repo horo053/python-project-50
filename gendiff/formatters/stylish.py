@@ -20,8 +20,14 @@ def format(diff_tree, depth=0):
             indent = '  ' + '  ' * depth
             old_value = node['old']
             new_value = node['new']
-            lines.append(f"{indent}- {key}: {str(old_value)}")
-            lines.append(f"{indent}+ {key}: {str(new_value)}")
+            old_value = str(old_value).capitalize() if (str(old_value).lower()
+                                                        in ('true', 'false')) \
+                else str(old_value)
+            new_value = str(new_value).capitalize() if (str(new_value).lower()
+                                                        in ('true', 'false')) \
+                else str(new_value)
+            lines.append(f"{indent}- {key}: {old_value}")
+            lines.append(f"{indent}+ {key}: {new_value}")
             continue
         elif node_type == 'nested':
             indent = '  ' + '  ' * depth
@@ -33,7 +39,10 @@ def format(diff_tree, depth=0):
             lines.append('  }')
             continue
 
-        lines.append(f"{indent}{prefix}{key}: {str(value)}")
+        value = str(value).capitalize() if (str(value).lower()
+                                            in ('true', 'false')) \
+            else str(value)
+        lines.append(f"{indent}{prefix}{key}: {value}")
 
     lines.append('}')
     return '\n'.join(lines)
