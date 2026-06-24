@@ -47,7 +47,7 @@ class TestGenerateDiff:
         dictionaries_two = os.path.join(dir_file_path(), file2_name)
         result = generate_diff(dictionaries_one, dictionaries_two, format_name)
         assert result == ('{\n  + host: hexlet.io\n    timeout: 20\n  '
-                          '- verbose: True\n  + verbose: False\n}')
+                          '- verbose: true\n  + verbose: false\n}')
 
     def test_default_stylish_format(self):
         file1_name = 'file1_for_test.json'
@@ -56,7 +56,7 @@ class TestGenerateDiff:
         dictionaries_two = os.path.join(dir_file_path(), file2_name)
         result = generate_diff(dictionaries_one, dictionaries_two)
         assert result == ('{\n  + host: hexlet.io\n    timeout: 20\n  '
-                          '- verbose: True\n  + verbose: False\n}')
+                          '- verbose: true\n  + verbose: false\n}')
 
     def test_plain_format(self):
         file1_name = 'file1_for_test.json'
