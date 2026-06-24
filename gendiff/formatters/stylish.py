@@ -23,16 +23,6 @@ def format_value(value, depth=0):
     return '\n'.join(lines)
 
 
-def _format_node_value(value, depth):
-    if isinstance(value, dict):
-        return format_value(value, depth)
-    if isinstance(value, bool):
-        return str(value).lower()
-    if value is None:
-        return 'null'
-    return str(value)
-
-
 def _format_leaf_node(key, node, depth):
     node_type = node['type']
     value = node['value']
@@ -47,8 +37,12 @@ def _format_leaf_node(key, node, depth):
         prefix = ''
         indent = '    ' + '  ' * depth
 
-    formatted_value = _format_node_value(value, depth + 1)
-    return f"{indent}{prefix}{key}: {formatted_value}"
+    if isinstance(value, dict):
+        formatted_value = format_value(value, depth + 1)
+        return f"{indent}{prefix}{key}: {formatted_value}"
+    else:
+        formatted_value = 'null' if value is None else str(value).lower()
+        return f"{indent}{prefix}{key}: {formatted_value}"
 
 
 def _format_changed_node(key, node, depth):
@@ -56,24 +50,35 @@ def _format_changed_node(key, node, depth):
     old_value = node['old']
     new_value = node['new']
 
-    old_formatted = _format_node_value(old_value, depth + 1)
-    new_formatted = _format_node_value(new_value, depth + 1)
+    # Старое значение
+    if isinstance(old_value, dict):
+        old_formatted = format_value(old_value, depth + 1)
+        old_line = f"{indent}- {key}: {old_formatted}"
+    else:
+        old_formatted = 'null' if old_value is None else str(old_value).lower()
+        old_line = f"{indent}- {key}: {old_formatted}"
 
-    return [
-        f"{indent}- {key}: {old_formatted}",
-        f"{indent}+ {key}: {new_formatted}"
-    ]
+    # Новое значение
+    if isinstance(new_value, dict):
+        new_formatted = format_value(new_value, depth + 1)
+        new_line = f"{indent}+ {key}: {new_formatted}"
+    else:
+        new_formatted = 'null' if new_value is None else str(new_value).lower()
+        new_line = f"{indent}+ {key}: {new_formatted}"
+
+    return [old_line, new_line]
 
 
 def _format_nested_node(key, node, depth):
-    indent = '  ' + '  ' * depth
     children = node['children']
     nested_lines = format(children, depth + 1).split('\n')
 
-    lines = [f"{indent}  {key}: {nested_lines[0]}"]
+    # Правильные отступы для вложенного узла
+    indent = '  ' * depth
+    lines = [f"{indent}    {key}: {nested_lines[0]}"]
     for line in nested_lines[1:-1]:
-        lines.append(f"{indent}{line}")
-    lines.append(f"{indent}{nested_lines[-1]}")
+        lines.append(f"{indent}  {line}")
+    lines.append(f"{indent}  {nested_lines[-1]}")
     return lines
 
 
