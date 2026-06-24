@@ -1,11 +1,8 @@
 import collections.abc
 import json
-import os
 
 import yaml
 from yaml.loader import SafeLoader
-
-from files.file_path import dir_file_path
 
 # не проходили тесты на парсинг yaml, править парсинг yaml файлов
 if not hasattr(collections, 'Hashable'):
@@ -13,7 +10,7 @@ if not hasattr(collections, 'Hashable'):
 
 
 def parser_file(file_json):
-    file_path = os.path.join(dir_file_path(), file_json)
+    file_path = file_json
 
     try:
         if file_json[-4:] == 'json':

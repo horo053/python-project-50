@@ -1,4 +1,5 @@
 from ..formatters import json_formatter, plain, stylish
+from .parser_for_file import parser_file
 
 
 def build_diff(d1, d2):
@@ -22,7 +23,9 @@ def build_diff(d1, d2):
     return diff
 
 
-def generate_diff(dict1, dict2, format_name='stylish'):
+def generate_diff(file_path1, file_path2, format_name='stylish'):
+    dict1 = parser_file(file_path1)
+    dict2 = parser_file(file_path2)
     diff_tree = build_diff(dict1, dict2)
 
     if format_name == 'stylish':
