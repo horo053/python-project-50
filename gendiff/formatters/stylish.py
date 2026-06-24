@@ -1,42 +1,103 @@
+def format_value(value, depth=0):
+    if not isinstance(value, dict):
+        if isinstance(value, bool):
+            return str(value).lower()
+        elif value is None:
+            return 'null'
+        else:
+            return str(value)
+
+    indent = '  ' * (depth + 1)
+    lines = ['{']
+    for key in sorted(value.keys()):
+        val = value[key]
+        if isinstance(val, dict):
+            nested = format_value(val, depth + 1).split('\n')
+            lines.append(f"{indent}{key}: {nested[0]}")
+            for line in nested[1:-1]:
+                lines.append(f"{indent}  {line}")
+            lines.append(f"{indent}{nested[-1]}")
+        else:
+            formatted_val = 'null' if val is None else str(val).lower()
+            lines.append(f"{indent}{key}: {formatted_val}")
+    lines.append('  ' * depth + '}')
+    return '\n'.join(lines)
+
+
+def _format_value_with_indent(value, depth, indent, prefix, key):
+    if isinstance(value, dict):
+        formatted_value = format_value(value, depth + 1)
+        return f"{indent}{prefix}{key}: {formatted_value}"
+    else:
+        formatted_value = 'null' if value is None else str(value).lower()
+        return f"{indent}{prefix}{key}: {formatted_value}"
+
+
+def _format_changed_node(key, node, depth):
+    indent = '  ' * depth
+    old_value = node['old']
+    new_value = node['new']
+    lines = []
+
+    if isinstance(old_value, dict):
+        old_formatted = format_value(old_value, depth + 1)
+        lines.append(f"{indent}  - {key}: {old_formatted}")
+    else:
+        old_formatted = 'null' if old_value is None else str(old_value).lower()
+        lines.append(f"{indent}  - {key}: {old_formatted}")
+
+    # Новое значение
+    if isinstance(new_value, dict):
+        new_formatted = format_value(new_value, depth + 1)
+        lines.append(f"{indent}  + {key}: {new_formatted}")
+    else:
+        new_formatted = 'null' if new_value is None else str(new_value).lower()
+        lines.append(f"{indent}  + {key}: {new_formatted}")
+
+    return lines
+
+
+def _format_nested_node(key, node, depth):
+    indent = '  ' * depth
+    children = node['children']
+    nested_lines = format(children, depth + 1).split('\n')
+    lines = [f"{indent}    {key}: {nested_lines[0]}"]
+    for line in nested_lines[1:-1]:
+        lines.append(f"{indent}  {line}")
+    lines.append(f"{indent}  {nested_lines[-1]}")
+    return lines
+
+
+def _format_leaf_node(key, node, depth):
+    node_type = node['type']
+    value = node['value']
+
+    if node_type == 'added':
+        prefix = '+ '
+        indent = '  ' * depth + '  '
+    elif node_type == 'removed':
+        prefix = '- '
+        indent = '  ' * depth + '  '
+    else:  # unchanged
+        prefix = ''
+        indent = '  ' * depth + '    '
+
+    return _format_value_with_indent(value, depth, indent, prefix, key)
+
+
 def format(diff_tree, depth=0):
     lines = ['{']
 
     for key in sorted(diff_tree.keys()):
         node = diff_tree[key]
         node_type = node['type']
-        if node_type == 'added':
-            prefix = '+ '
-            value = node['value']
-            indent = '  ' + '  ' * depth
-        elif node_type == 'removed':
-            prefix = '- '
-            value = node['value']
-            indent = '  ' + '  ' * depth
-        elif node_type == 'unchanged':
-            prefix = ''
-            value = node['value']
-            indent = '    ' + '  ' * depth
+
+        if node_type == 'nested':
+            lines.extend(_format_nested_node(key, node, depth))
         elif node_type == 'changed':
-            indent = '  ' + '  ' * depth
-            old_value = node['old']
-            new_value = node['new']
-            lines.append(f'''{indent}- {key}: {'null' 
-            if str(old_value) == 'None' else str(old_value).lower()}''')
-            lines.append(f'''{indent}+ {key}: {'null' 
-            if str(new_value) == 'None' else str(new_value).lower()}''')
-            continue
-        elif node_type == 'nested':
-            indent = '  ' + '  ' * depth
-            children = node['children']
-            nested_lines = format(children, depth + 1).split('\n')
-            lines.append(f"    {key}: {{")
-            for line in nested_lines[1:-1]:
-                lines.append('  ' + line)
-            lines.append('  }')
-            continue
+            lines.extend(_format_changed_node(key, node, depth))
+        else:
+            lines.append(_format_leaf_node(key, node, depth))
 
-        lines.append(f'''{indent}{prefix}{key}: {'null' 
-        if str(value) == 'None' else str(value).lower()}''')
-
-    lines.append('}')
+    lines.append('  ' * depth + '}')
     return '\n'.join(lines)
