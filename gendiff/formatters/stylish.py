@@ -6,20 +6,22 @@ def format_value(value, depth=0):
             return 'null'
         return str(value)
 
-    indent = '  ' * depth
+    indent = '  ' * (depth + 1)
     lines = ['{']
+
     for key in sorted(value.keys()):
         val = value[key]
         if isinstance(val, dict):
             nested = format_value(val, depth + 1).split('\n')
-            lines.append(f"{indent}  {key}: {nested[0]}")
+            lines.append(f"{indent}{key}: {nested[0]}")
             for line in nested[1:-1]:
-                lines.append(f"{indent}    {line}")
-            lines.append(f"{indent}  {nested[-1]}")
+                lines.append(f"{indent}  {line}")
+            lines.append(f"{indent}{nested[-1]}")
         else:
             formatted_val = 'null' if val is None else str(val).lower()
-            lines.append(f"{indent}  {key}: {formatted_val}")
-    lines.append(indent + '}')
+            lines.append(f"{indent}{key}: {formatted_val}")
+
+    lines.append('  ' * depth + '}')
     return '\n'.join(lines)
 
 
@@ -43,20 +45,19 @@ def format(diff_tree, depth=0):
             old_value = node['old']
             new_value = node['new']
 
+            # Старое значение
             if isinstance(old_value, dict):
-                old_formatted = format_value(old_value, depth + 1)
+                old_formatted = format_value(old_value, depth)
                 lines.append(f"{indent}  - {key}: {old_formatted}")
             else:
-                old_formatted = 'null' if old_value is None \
-                    else str(old_value).lower()
+                old_formatted = 'null' if old_value is None else str(old_value).lower()
                 lines.append(f"{indent}  - {key}: {old_formatted}")
 
             if isinstance(new_value, dict):
-                new_formatted = format_value(new_value, depth + 1)
+                new_formatted = format_value(new_value, depth)
                 lines.append(f"{indent}  + {key}: {new_formatted}")
             else:
-                new_formatted = 'null' if new_value is None \
-                    else str(new_value).lower()
+                new_formatted = 'null' if new_value is None else str(new_value).lower()
                 lines.append(f"{indent}  + {key}: {new_formatted}")
 
         else:
@@ -68,16 +69,15 @@ def format(diff_tree, depth=0):
             elif node_type == 'removed':
                 prefix = '- '
                 value_indent = f"{indent}  "
-            else:  # unchanged
+            else:
                 prefix = ''
                 value_indent = f"{indent}    "
 
             if isinstance(value, dict):
-                formatted_value = format_value(value, depth + 1)
+                formatted_value = format_value(value, depth)
                 lines.append(f"{value_indent}{prefix}{key}: {formatted_value}")
             else:
-                formatted_value = 'null' if value is None \
-                    else str(value).lower()
+                formatted_value = 'null' if value is None else str(value).lower()
                 lines.append(f"{value_indent}{prefix}{key}: {formatted_value}")
 
     lines.append(indent + '}')
