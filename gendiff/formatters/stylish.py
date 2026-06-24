@@ -1,84 +1,92 @@
-def format_value(value, depth=0):
-    if not isinstance(value, dict):
-        if isinstance(value, bool):
-            return str(value).lower()
-        elif value is None:
-            return 'null'
-        return str(value)
-
-    indent = '  ' * (depth + 1)
-    lines = ['{']
-
-    for key in sorted(value.keys()):
-        val = value[key]
-        if isinstance(val, dict):
-            nested = format_value(val, depth + 1).split('\n')
-            lines.append(f"{indent}{key}: {nested[0]}")
-            for line in nested[1:-1]:
-                lines.append(f"{indent}  {line}")
-            lines.append(f"{indent}{nested[-1]}")
-        else:
-            formatted_val = 'null' if val is None else str(val).lower()
-            lines.append(f"{indent}{key}: {formatted_val}")
-
-    lines.append('  ' * depth + '}')
-    return '\n'.join(lines)
+import itertools
 
 
-def format(diff_tree, depth=0):
-    lines = ['{']
-    indent = '  ' * depth
+map_type_to_sign = {
+    'unchanged': ' ',
+    'nested': ' ',
+    'removed': '-',
+    'added': '+',
+}
 
-    for key in sorted(diff_tree.keys()):
-        node = diff_tree[key]
-        node_type = node['type']
 
-        if node_type == 'nested':
-            children = node['children']
-            nested_lines = format(children, depth + 1).split('\n')
-            lines.append(f"{indent}    {key}: {nested_lines[0]}")
-            for line in nested_lines[1:-1]:
-                lines.append(f"{indent}  {line}")
-            lines.append(f"{indent}  {nested_lines[-1]}")
+def get_indent(depth, indent_type=' ', indent_size=4, offset=0):
+    current_indent_size = depth * indent_size
+    return indent_type * current_indent_size + (indent_type * offset)
 
-        elif node_type == 'changed':
-            old_value = node['old']
-            new_value = node['new']
 
-            # Старое значение
-            if isinstance(old_value, dict):
-                old_formatted = format_value(old_value, depth)
-                lines.append(f"{indent}  - {key}: {old_formatted}")
-            else:
-                old_formatted = 'null' if old_value is None else str(old_value).lower()
-                lines.append(f"{indent}  - {key}: {old_formatted}")
+def stringify(tree, depth):
 
-            if isinstance(new_value, dict):
-                new_formatted = format_value(new_value, depth)
-                lines.append(f"{indent}  + {key}: {new_formatted}")
-            else:
-                new_formatted = 'null' if new_value is None else str(new_value).lower()
-                lines.append(f"{indent}  + {key}: {new_formatted}")
+    if isinstance(tree, dict):
+        brace_indent = get_indent(depth + 1)
+        deep_indent = get_indent(depth + 1, offset=2)
+        formatted_values = []
+        for key, value in tree.items():
+            formatted_values.append(
+                '{}  {}: {}'.format(
+                    deep_indent,
+                    key,
+                    stringify(value, depth + 1),
+                )
+            )
+        return '{{{}}}'.format(
+            '\n' + '\n'.join(formatted_values) + '\n' + brace_indent
+        )
+    if tree is None:
+        return 'null'
+    if isinstance(tree, str):
+        return tree
+    return str(tree).lower()
 
-        else:
-            value = node['value']
 
-            if node_type == 'added':
-                prefix = '+ '
-                value_indent = f"{indent}  "
-            elif node_type == 'removed':
-                prefix = '- '
-                value_indent = f"{indent}  "
-            else:
-                prefix = ''
-                value_indent = f"{indent}    "
+def walk(tree, depth):
+    brace_indent = get_indent(depth)
+    deep_indent = get_indent(depth, offset=2)
+    lines = []
+    if not isinstance(tree, list) and not isinstance(tree, dict):
+        return str(tree)
+    for node in tree:
+        if node['type'] == 'nested':
+            lines.append('{}{} {}: {}'.format(
+                deep_indent, map_type_to_sign['nested'],
+                node['key'],
+                walk(node['children'], depth + 1)
+            ))
+            continue
+        if node['type'] == 'changed':
+            lines.append('{}{} {}: {}'.format(
+                deep_indent,
+                map_type_to_sign['removed'],
+                node['key'],
 
-            if isinstance(value, dict):
-                formatted_value = format_value(value, depth)
-                lines.append(f"{value_indent}{prefix}{key}: {formatted_value}")
-            else:
-                formatted_value = 'null' if value is None else str(value).lower()
-                lines.append(f"{value_indent}{prefix}{key}: {formatted_value}")
+                stringify(
+                    node['old_value'],
+                    depth,
+                )
+            ))
+            lines.append('{}{} {}: {}'.format(
+                deep_indent,
+                map_type_to_sign['added'],
+                node['key'],
+                stringify(
+                    node['new_value'],
+                    depth,
+                )
+            ))
+            continue
 
-    lines.append(indent + '}')
-    return '\n'.join(lines)
+        lines.append('{}{} {}: {}'.format(
+            deep_indent,
+            map_type_to_sign[node['type']],
+            node['key'],
+            stringify(
+                node['value'],
+                depth,
+            )
+        ))
+
+    formatted_diff = itertools.chain("{", lines, [brace_indent + "}"])
+    return '\n'.join(formatted_diff)
+
+
+def format(nodes):
+    return walk(nodes, 0)
