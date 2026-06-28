@@ -4,11 +4,13 @@ import pytest
 
 from gendiff.scripts.parser_for_file import parser_file
 
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
 
 class TestParserForFile:
     @pytest.mark.parametrize('file_name', ['file2.json', 'file2.yaml'])
     def test_successful_parsing_format_file(self, file_name):
-        file_path = os.path.join('test_data', file_name)
+        file_path = os.path.join(script_dir, 'test_data', file_name)
         assert (parser_file(file_path) ==
                 {'timeout': 20, 'verbose': True, 'host': 'hexlet.io'})
 
@@ -33,7 +35,7 @@ class TestParserForFile:
 
     def test_file_incorrect_json(self):
         file_name = 'file_incorrect.json'
-        file_path = os.path.join('test_data', file_name)
+        file_path = os.path.join(script_dir, 'test_data', file_name)
 
         with pytest.raises(ValueError) as exc_info:
             parser_file(file_path)
@@ -44,7 +46,7 @@ class TestParserForFile:
 
     def test_file_incorrect_yaml(self):
         file_name = 'file_incorrect.yml'
-        file_path = os.path.join('test_data', file_name)
+        file_path = os.path.join(script_dir, 'test_data', file_name)
 
         with pytest.raises(ValueError) as exc_info:
             parser_file(file_path)
