@@ -1,6 +1,5 @@
 import os
 
-from files.file_path import dir_file_path
 from gendiff.scripts.diff import build_diff, generate_diff
 
 
@@ -43,8 +42,8 @@ class TestGenerateDiff:
         file1_name = 'file1_for_test.json'
         file2_name = 'file2_for_test.json'
         format_name = 'stylish'
-        dictionaries_one = os.path.join(dir_file_path(), file1_name)
-        dictionaries_two = os.path.join(dir_file_path(), file2_name)
+        dictionaries_one = os.path.join('test_data', file1_name)
+        dictionaries_two = os.path.join('test_data', file2_name)
         result = generate_diff(dictionaries_one, dictionaries_two, format_name)
         assert result == ('{\n  + host: hexlet.io\n    timeout: 20\n  '
                           '- verbose: true\n  + verbose: false\n}')
@@ -52,8 +51,8 @@ class TestGenerateDiff:
     def test_default_stylish_format(self):
         file1_name = 'file1_for_test.json'
         file2_name = 'file2_for_test.json'
-        dictionaries_one = os.path.join(dir_file_path(), file1_name)
-        dictionaries_two = os.path.join(dir_file_path(), file2_name)
+        dictionaries_one = os.path.join('test_data', file1_name)
+        dictionaries_two = os.path.join('test_data', file2_name)
         result = generate_diff(dictionaries_one, dictionaries_two)
         assert result == ('{\n  + host: hexlet.io\n    timeout: 20\n  '
                           '- verbose: true\n  + verbose: false\n}')
@@ -62,8 +61,8 @@ class TestGenerateDiff:
         file1_name = 'file1_for_test.json'
         file2_name = 'file2_for_test.json'
         format_name = 'plain'
-        dictionaries_one = os.path.join(dir_file_path(), file1_name)
-        dictionaries_two = os.path.join(dir_file_path(), file2_name)
+        dictionaries_one = os.path.join('test_data', file1_name)
+        dictionaries_two = os.path.join('test_data', file2_name)
         result = generate_diff(dictionaries_one, dictionaries_two, format_name)
         print(result)
         assert result == ("Property 'host' was added with value: 'hexlet.io'"
@@ -74,8 +73,8 @@ class TestGenerateDiff:
         file1_name = 'file1_for_test.json'
         file2_name = 'file2_for_test.json'
         format_name = 'json'
-        dictionaries_one = os.path.join(dir_file_path(), file1_name)
-        dictionaries_two = os.path.join(dir_file_path(), file2_name)
+        dictionaries_one = os.path.join('test_data', file1_name)
+        dictionaries_two = os.path.join('test_data', file2_name)
         correct_jason = '''{
   "host": {
     "type": "added",
@@ -98,7 +97,7 @@ class TestGenerateDiff:
         file1_name = 'file1_for_test.json'
         file2_name = 'file2_for_test.json'
         format_name = 'non-existent'
-        dictionaries_one = os.path.join(dir_file_path(), file1_name)
-        dictionaries_two = os.path.join(dir_file_path(), file2_name)
+        dictionaries_one = os.path.join('test_data', file1_name)
+        dictionaries_two = os.path.join('test_data', file2_name)
         result = generate_diff(dictionaries_one, dictionaries_two, format_name)
         assert result == f'Указанный формат {format_name} не существует'
